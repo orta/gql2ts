@@ -32,11 +32,11 @@ const generateRootTypes = schema => `  interface IGraphQLResponseRoot {
     column: number;
   }`
 
-const generateInterfaceName = name => `I${name}`;
+const generateInterfaceName = name => `${name}Type`;
 
 const generateTypeName = name => `${name}`;
 
-const generateTypeDeclaration = (description, name, possibleTypes) => `  /*
+const generateTypeDeclaration = (description, name, possibleTypes) => `  /**
     description: ${description}
   */
   type ${name} = ${possibleTypes};
@@ -45,16 +45,16 @@ const generateTypeDeclaration = (description, name, possibleTypes) => `  /*
 
 const typeNameDeclaration = '    __typename: string;\n'
 
-const generateInterfaceDeclaration = (description, declaration, fields, additionalInfo, isInput) => `${additionalInfo}  /*
+const generateInterfaceDeclaration = (description, declaration, fields, additionalInfo, isInput) => `${additionalInfo}  /**
     description: ${description}
   */
   interface ${declaration} {
 ${isInput ? '' : typeNameDeclaration}${fields}
   }`;
 
-const generateEnumName = name => `I${name}Enum`;
+const generateEnumName = name => `${name}Enum`;
 
-const generateEnumDeclaration = (description, name, enumValues) => `  /*
+const generateEnumDeclaration = (description, name, enumValues) => `  /**
     description: ${description}
   */
   type ${generateEnumName(name)} = ${enumValues.join(' | ')};`;
@@ -117,8 +117,9 @@ const fieldToDefinition = (field, isInput) => {
   } else {
     fieldDef = `${field.name}: ${interfaceName}`;
   }
-
-  return `    ${fieldDef};`;
+  
+  const description = field.description !== null ? `  /** ${field.description} */\n` : ``
+  return `${description}  ${fieldDef};`;
 }
 
 const findRootType = type => {
@@ -143,6 +144,7 @@ const typeToInterface = (type, ignoredTypes) => {
 
   let isInput = type.kind === 'INPUT_OBJECT';
   let f = isInput ? type.inputFields : type.fields;
+  f = f ? f : []
 
   let fields = f
                 .filter(field => filterField(field, ignoredTypes))
